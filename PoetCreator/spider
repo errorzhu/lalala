@@ -1,0 +1,31 @@
+# -*-  coding: utf-8 -*-
+from bs4 import BeautifulSoup
+import re
+import requests
+
+url = r'http://www.gushiwen.org/gushi/aiqing.aspx'
+pattern = re.compile('http://so.gushiwen.org/view_[0-9].*')
+
+
+def getPoetLinks():
+    html = requests.get(url)
+    soup = BeautifulSoup(html.text, 'lxml')
+    links = soup.find_all('a', target="_blank")
+    return [link['href'] for link in links if re.match(pattern, link['href'])]
+
+
+def getPoetContent(url):
+    html = requests.get(url)
+    soup = BeautifulSoup(html.text, 'lxml')
+    content = soup.find_all('div', {'class': "contson"})
+    contents = re.findall(re.compile('<p>(.*)</p>'), str(content[0]))
+    with open('target', 'a') as f:
+        for c in contents:
+            c = c.replace('<br/>', '')
+            f.write(c)
+
+
+if __name__ == '__main__':
+    links = getPoetLinks()
+    for link in links:
+        getPoetContent(link)
